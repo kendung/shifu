@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * {@link GSUtils} is a utility class to operate google storage bucket. 
  * This class relies on gsutil command line tool to copy files from local file system to google storage bucket.
@@ -38,6 +40,9 @@ public class GSUtils {
         if (!srcDirectoryFile.exists()){
             String msg = MessageFormat.format("Directory -{0} does not exist.", srcDirectory);
             throw new Exception(msg);
+        }
+        if (StringUtils.isBlank(bucket_name)){
+            throw new Exception("Please specify GCP bucket name via environment variable GS_BUCKET.");
         }
         if (bucketExists(bucket_name)){
             String gsutilCmd = MessageFormat.format("gsutil cp -r {0} gs://{1}{2}", srcDirectory, bucket_name, destDirectory );

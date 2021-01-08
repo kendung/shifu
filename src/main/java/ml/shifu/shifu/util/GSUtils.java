@@ -85,6 +85,17 @@ public class GSUtils {
     }
 
     /**
+     * check whether environment is google cloud env or not
+     * @return
+     * @throws Exception
+     */
+    public static boolean isGoogleCloudEnvironment() throws Exception{
+        String cmd = "gcloud config list";
+        CommandExecutionOutput output = executeCommand(cmd);
+        return output != null && output.code == 0;
+    }
+
+    /**
      * Execute shell command
      * @param command
      * @return CommandExecutionOutput

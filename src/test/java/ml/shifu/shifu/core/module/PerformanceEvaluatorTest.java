@@ -15,25 +15,26 @@
  */
 package ml.shifu.shifu.core.module;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.Test;
+
 import ml.shifu.shifu.container.obj.EvalConfig;
 import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
 import ml.shifu.shifu.container.obj.ModelConfig;
 import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
 import ml.shifu.shifu.container.obj.RawSourceData;
 import ml.shifu.shifu.core.PerformanceEvaluator;
-import org.apache.commons.io.FileUtils;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.Test;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public class PerformanceEvaluatorTest {
 
     @Test(expectedExceptions = FileNotFoundException.class)
     public void reviewTest() throws IOException {
-        ModelConfig model = ModelConfig.createInitModelConfig("test", ALGORITHM.NN, ".", false);
+        ModelConfig model = ModelConfig.createInitModelConfig("test", ALGORITHM.NN, ".", RunMode.LOCAL);
         EvalConfig eval = new EvalConfig();
         eval.setName("test");
         eval.setDataSet(new RawSourceData());

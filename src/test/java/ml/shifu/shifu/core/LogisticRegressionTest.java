@@ -15,9 +15,11 @@
  */
 package ml.shifu.shifu.core;
 
-import ml.shifu.shifu.container.obj.ModelConfig;
-import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
-import ml.shifu.shifu.core.alg.LogisticRegressionTrainer;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Random;
+
 import org.apache.commons.io.FileUtils;
 import org.encog.ml.data.MLDataPair;
 import org.encog.ml.data.MLDataSet;
@@ -29,10 +31,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Random;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
+import ml.shifu.shifu.core.alg.LogisticRegressionTrainer;
 
 
 public class LogisticRegressionTest {
@@ -48,7 +50,7 @@ public class LogisticRegressionTest {
     public void setUp() throws IOException {
         random = new Random();
 
-        config = ModelConfig.createInitModelConfig("test", ALGORITHM.LR, "test", false);
+        config = ModelConfig.createInitModelConfig("test", ALGORITHM.LR, "test", RunMode.LOCAL);
 
         config.getVarSelect().setFilterNum(5);
         config.getTrain().setAlgorithm("LR");

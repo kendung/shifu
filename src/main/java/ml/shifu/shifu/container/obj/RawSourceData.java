@@ -38,7 +38,7 @@ public class RawSourceData implements Cloneable {
      */
     @JsonDeserialize(using = SouceTypeDeserializer.class)
     public static enum SourceType {
-        LOCAL, HDFS, S3
+        LOCAL, HDFS, S3, GS //GS represents google storage bucket
     }
 
     /**

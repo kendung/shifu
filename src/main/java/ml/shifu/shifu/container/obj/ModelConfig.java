@@ -27,15 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.Lists;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.Lists;
 
 import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
 import ml.shifu.shifu.container.obj.ModelNormalizeConf.NormType;
@@ -49,6 +49,7 @@ import ml.shifu.shifu.util.BinUtils;
 import ml.shifu.shifu.util.CommonUtils;
 import ml.shifu.shifu.util.Constants;
 import ml.shifu.shifu.util.Environment;
+import ml.shifu.shifu.util.GSUtils;
 import ml.shifu.shifu.util.HDFSUtils;
 
 /**
@@ -86,7 +87,8 @@ public class ModelConfig {
     private ModelNormalizeConf normalize = new ModelNormalizeConf();
 
     /**
-     * Model training configurations like baggingNum, algorithm (LR/NN/GBT/RF), training parameters ...
+     * Model training configurations like baggingNum, algorithm (LR/NN/GBT/RF),
+     * training parameters ...
      */
     private ModelTrainConf train = new ModelTrainConf();
 
@@ -160,20 +162,16 @@ public class ModelConfig {
     /**
      * Create init ModelConfig.json
      * 
-     * @param modelName
-     *            name of model dataset
-     * @param alg
-     *            , algorithm used, for LR/NN/RF/GBT, diferent init parameters will be set
-     * @param description
-     *            data set description
-     * @param enableHadoop
-     *            if it is distributed Hadoop cluster mode
+     * @param modelName   name of model dataset
+     * @param alg         , algorithm used, for LR/NN/RF/GBT, diferent init
+     *                    parameters will be set
+     * @param description data set description
+     * @param runMode     runMode
      * @return ModelConfig instance
-     * @throws IOException
-     *             if any exception in column configuration file creation
+     * @throws IOException if any exception in column configuration file creation
      */
     public static ModelConfig createInitModelConfig(String modelName, ALGORITHM alg, String description,
-            boolean enableHadoop) throws IOException {
+            RunMode runMode) throws IOException {
         ModelConfig modelConfig = new ModelConfig();
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -183,7 +181,7 @@ public class ModelConfig {
         basic.setName(modelName);
 
         basic.setAuthor(Environment.getProperty(Environment.SYSTEM_USER));
-        basic.setRunMode(enableHadoop ? RunMode.DIST : RunMode.LOCAL);
+        basic.setRunMode(runMode);
         basic.setDescription("Created at " + df.format(new Date()));
         modelConfig.setBasic(basic);
 
@@ -194,14 +192,31 @@ public class ModelConfig {
         String exampleLocalDSPath = new File(Environment.getProperty(Environment.SHIFU_HOME), File.separator + "example"
                 + File.separator + "cancer-judgement" + File.separator + "DataStore" + File.separator + "DataSet1")
                         .toString();
-        if(enableHadoop) {
+        if (runMode == RunMode.DIST || runMode == RunMode.MAPRED) {
             Path dst = new Path(File.separator + "user" + File.separator
                     + Environment.getProperty(Environment.SYSTEM_USER) + File.separator + "cancer-judgement");
-            if(!ShifuFileUtils.isFileExists(dst, SourceType.HDFS)) {
+            if (!ShifuFileUtils.isFileExists(dst, SourceType.HDFS)) {
                 HDFSUtils.getFS(dst).mkdirs(dst);
                 HDFSUtils.getFS(dst).copyFromLocalFile(new Path(exampleLocalDSPath), dst);
             }
             dataSet.setSource(SourceType.HDFS);
+            dataSet.setDataPath(
+                    new File(File.separator + "user" + File.separator + Environment.getProperty(Environment.SYSTEM_USER)
+                            + File.separator + "cancer-judgement" + File.separator + "DataSet1").toString());
+            dataSet.setHeaderPath(new File(File.separator + "user" + File.separator
+                    + Environment.getProperty(Environment.SYSTEM_USER) + File.separator + "cancer-judgement"
+                    + File.separator + "DataSet1" + File.separator + ".pig_header").toString());
+        } else if (runMode == RunMode.GCP) {
+            // this is Google cloud platform mode
+            String dst = File.separator + "user" + File.separator + Environment.getProperty(Environment.SYSTEM_USER)
+                    + File.separator + "cancer-judgement" + File.separator + "DataSet1";
+            try {
+                //remember to set GS_BUCKET environment variable before using mode RunMode.GCP
+                GSUtils.copyFromLocalFile(exampleLocalDSPath, Environment.getProperty(Environment.GCP_STORAGE_BUCKET), dst);
+            } catch (Exception e) {
+                throw new IOException(e.getLocalizedMessage(), e);
+            }
+            dataSet.setSource(SourceType.GS);
             dataSet.setDataPath(
                     new File(File.separator + "user" + File.separator + Environment.getProperty(Environment.SYSTEM_USER)
                             + File.separator + "cancer-judgement" + File.separator + "DataSet1").toString());
@@ -298,13 +313,29 @@ public class ModelConfig {
         String exampleLocalESFolder = new File(Environment.getProperty(Environment.SHIFU_HOME),
                 File.separator + "example" + File.separator + "cancer-judgement" + File.separator + "DataStore"
                         + File.separator + "EvalSet1").toString();
-        if(enableHadoop) {
+        if(runMode == RunMode.DIST || runMode == RunMode.MAPRED) {
             evalSet.setSource(SourceType.HDFS);
             Path dst = new Path(File.separator + "user" + File.separator
                     + Environment.getProperty(Environment.SYSTEM_USER) + File.separator + "cancer-judgement"
                     + File.separator + "EvalSet1");
             if (!ShifuFileUtils.isFileExists(dst, SourceType.HDFS)) {
                 HDFSUtils.getFS(dst).copyFromLocalFile(new Path(exampleLocalESFolder), dst);
+            }
+            evalSet.setDataPath(
+                    new File(File.separator + "user" + File.separator + Environment.getProperty(Environment.SYSTEM_USER)
+                            + File.separator + "cancer-judgement" + File.separator + "EvalSet1").toString());
+            evalSet.setHeaderPath(new File(File.separator + "user" + File.separator
+                    + Environment.getProperty(Environment.SYSTEM_USER) + File.separator + "cancer-judgement"
+                    + File.separator + "EvalSet1" + File.separator + ".pig_header").toString());
+        } else if (runMode == RunMode.GCP){
+            evalSet.setSource(SourceType.GS);
+            String dst = File.separator + "user" + File.separator + Environment.getProperty(Environment.SYSTEM_USER)
+            + File.separator + "cancer-judgement" + File.separator + "EvalSet1";
+            try {
+                //remember to set GS_BUCKET environment variable before using mode RunMode.GCP
+                GSUtils.copyFromLocalFile(exampleLocalESFolder, Environment.getProperty(Environment.GCP_STORAGE_BUCKET), dst);
+            } catch (Exception e) {
+                throw new IOException(e.getLocalizedMessage(), e);
             }
             evalSet.setDataPath(
                     new File(File.separator + "user" + File.separator + Environment.getProperty(Environment.SYSTEM_USER)

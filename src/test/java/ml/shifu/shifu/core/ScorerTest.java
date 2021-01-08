@@ -20,15 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import ml.shifu.shifu.container.ScoreObject;
-import ml.shifu.shifu.container.obj.ColumnConfig;
-import ml.shifu.shifu.container.obj.ColumnType;
-import ml.shifu.shifu.container.obj.ModelConfig;
-import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
-import ml.shifu.shifu.core.alg.NNTrainer;
-import ml.shifu.shifu.core.alg.SVMTrainer;
-import ml.shifu.shifu.util.Constants;
-
 import org.apache.commons.io.FileUtils;
 import org.encog.ml.BasicML;
 import org.encog.ml.data.MLDataPair;
@@ -40,6 +31,16 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import ml.shifu.shifu.container.ScoreObject;
+import ml.shifu.shifu.container.obj.ColumnConfig;
+import ml.shifu.shifu.container.obj.ColumnType;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
+import ml.shifu.shifu.core.alg.NNTrainer;
+import ml.shifu.shifu.core.alg.SVMTrainer;
+import ml.shifu.shifu.util.Constants;
+
 public class ScorerTest {
 
     private ModelConfig modelConfig;
@@ -48,7 +49,7 @@ public class ScorerTest {
 
     @BeforeClass
     public void setup() throws IOException {
-        modelConfig = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, ".", false);
+        modelConfig = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, ".", RunMode.LOCAL);
 
         modelConfig.getTrain().getParams().put("Propagation", "B");
         modelConfig.getTrain().getParams().put("NumHiddenLayers", 2);

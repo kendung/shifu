@@ -18,15 +18,17 @@ package ml.shifu.shifu.core.processor;
 import java.io.File;
 import java.io.IOException;
 
-import ml.shifu.shifu.container.obj.ModelConfig;
-import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
-import ml.shifu.shifu.exception.ShifuException;
-import ml.shifu.shifu.util.HDFSUtils;
-import ml.shifu.shifu.util.JSONUtils;
-
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
+import ml.shifu.shifu.exception.ShifuException;
+import ml.shifu.shifu.util.GSUtils;
+import ml.shifu.shifu.util.HDFSUtils;
+import ml.shifu.shifu.util.JSONUtils;
 
 /**
  * CreateModelProcessor class
@@ -83,13 +85,21 @@ public class CreateModelProcessor extends BasicModelProcessor implements Process
 
             // how to check hdfs
             boolean enableHadoop = HDFSUtils.isDistributedMode();
+            // check google cloud environment
+            boolean enableGcp = GSUtils.isGoogleCloudEnvironment();
+            RunMode runMode = RunMode.LOCAL;
             if(enableHadoop) {
                 log.info("Enable DIST/MAPRED mode because Hadoop cluster is detected.");
-            } else {
-                log.info("Enable LOCAL mode because Hadoop cluster is not detected.");
+                runMode = RunMode.MAPRED;
+            } else if (enableGcp){
+                log.info("Enable GCP mode because google cloud configuration is detected.");
+                runMode = RunMode.GCP;
+            } else{
+                log.info("Enable LOCAL mode because neither Hadoop cluster or google cloud environment is detected.");
+                runMode = RunMode.LOCAL;
             }
 
-            modelConfig = ModelConfig.createInitModelConfig(name, alg, description, enableHadoop);
+            modelConfig = ModelConfig.createInitModelConfig(name, alg, description, runMode);
 
             JSONUtils.writeValue(new File(modelSetFolder.getCanonicalPath() + File.separator + "ModelConfig.json"),
                     modelConfig);

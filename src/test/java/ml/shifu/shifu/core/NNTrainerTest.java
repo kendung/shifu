@@ -15,14 +15,18 @@
  */
 package ml.shifu.shifu.core;
 
-import ml.shifu.shifu.container.obj.ModelConfig;
-import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
-import ml.shifu.shifu.core.alg.NNTrainer;
-import ml.shifu.shifu.util.Constants;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.encog.Encog;
-import org.encog.engine.network.activation.*;
+import org.encog.engine.network.activation.ActivationLOG;
+import org.encog.engine.network.activation.ActivationLinear;
+import org.encog.engine.network.activation.ActivationSIN;
+import org.encog.engine.network.activation.ActivationSigmoid;
+import org.encog.engine.network.activation.ActivationTANH;
 import org.encog.ml.data.MLDataPair;
 import org.encog.ml.data.MLDataSet;
 import org.encog.ml.data.basic.BasicMLData;
@@ -38,10 +42,11 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
+import ml.shifu.shifu.core.alg.NNTrainer;
+import ml.shifu.shifu.util.Constants;
 
 
 public class NNTrainerTest {
@@ -100,7 +105,7 @@ public class NNTrainerTest {
 
 //    @Test
     public void testXorOperation() throws IOException {
-        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, ".", false);
+        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, ".", RunMode.LOCAL);
 
         config.getTrain().setBaggingSampleRate(1.0);
         config.getTrain().setValidSetRate(0.1);
@@ -135,7 +140,7 @@ public class NNTrainerTest {
 
     @Test(expectedExceptions = RuntimeException.class)
     public void testExceptionWhileSetupModel() throws IOException {
-        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, ".", false);
+        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, ".", RunMode.LOCAL);
 
         config.getTrain().getParams().put("Propagation", "Q");
         config.getTrain().getParams().put("NumHiddenLayers", 2);

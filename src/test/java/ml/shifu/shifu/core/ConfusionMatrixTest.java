@@ -27,6 +27,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import ml.shifu.shifu.container.obj.EvalConfig;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
 import ml.shifu.shifu.container.obj.ModelConfig;
 import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
 import ml.shifu.shifu.exception.ShifuException;
@@ -42,7 +43,7 @@ public class ConfusionMatrixTest {
 
     @BeforeClass
     public void setUp() throws IOException {
-        modelConfig = ModelConfig.createInitModelConfig("test", ALGORITHM.NN, null, false);
+        modelConfig = ModelConfig.createInitModelConfig("test", ALGORITHM.NN, null, RunMode.LOCAL);
         evalConfig = modelConfig.getEvalConfigByName("Eval1");
         new File("./models").mkdir();
     }

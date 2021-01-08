@@ -15,19 +15,19 @@
  */
 package ml.shifu.shifu.util;
 
-import ml.shifu.shifu.exception.ShifuErrorCode;
-import ml.shifu.shifu.exception.ShifuException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
+import ml.shifu.shifu.exception.ShifuErrorCode;
+import ml.shifu.shifu.exception.ShifuException;
 
 /**
  * {@link Environment} is used to store common env like 'SHIFU_HOME' and return to user by calling
@@ -56,6 +56,8 @@ public class Environment {
     public static final String VAR_SEL_MASTER_CONDUCTOR = "varselectMasterConductor";
     public static final String VAR_SEL_WORKER_CONDUCTOR = "varselectWorkerConductor";
 
+    public static final String GCP_STORAGE_BUCKET = "GS_BUCKET";
+
     private static Logger logger = LoggerFactory.getLogger(Environment.class);
     private static Properties properties = new Properties();
 
@@ -82,6 +84,10 @@ public class Environment {
             user = System.getProperty(USER_NAME);
         }
         properties.put(SYSTEM_USER, (StringUtils.isBlank(user) ? "" : user));
+
+        // load environment vairable GS_BUCKET
+        String gsBucket = ((System.getenv(GCP_STORAGE_BUCKET) == null) ? System.getProperty(GCP_STORAGE_BUCKET) : System.getenv(GCP_STORAGE_BUCKET));
+        properties.put(GCP_STORAGE_BUCKET, (StringUtils.isBlank(gsBucket) ? "" : gsBucket));
     }
 
     /*

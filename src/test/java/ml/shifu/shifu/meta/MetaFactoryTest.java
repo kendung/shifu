@@ -22,18 +22,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ml.shifu.shifu.container.meta.MetaFactory;
-import ml.shifu.shifu.container.meta.ValidateResult;
-import ml.shifu.shifu.container.obj.ModelConfig;
-import ml.shifu.shifu.container.obj.ModelTrainConf;
-import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
-import ml.shifu.shifu.core.dtrain.CommonConstants;
-
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import ml.shifu.shifu.container.meta.MetaFactory;
+import ml.shifu.shifu.container.meta.ValidateResult;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.ModelTrainConf;
+import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
+import ml.shifu.shifu.core.dtrain.CommonConstants;
 
 /**
  * MetaFactoryTest class
@@ -44,7 +45,7 @@ public class MetaFactoryTest {
 
     @BeforeClass
     public void setUp() throws IOException {
-        modelConfig = ModelConfig.createInitModelConfig("unittest", ALGORITHM.NN, "a model config for unit-test", false);
+        modelConfig = ModelConfig.createInitModelConfig("unittest", ALGORITHM.NN, "a model config for unit-test", RunMode.LOCAL);
         modelConfig.getBasic().setName("TestMode");
         modelConfig.getBasic().setAuthor("Author");
     }

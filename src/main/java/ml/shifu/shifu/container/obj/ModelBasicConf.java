@@ -15,13 +15,15 @@
  */
 package ml.shifu.shifu.container.obj;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ml.shifu.shifu.util.Constants;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import org.apache.commons.lang.StringUtils;
+
+import ml.shifu.shifu.util.Constants;
 
 /**
  * ModelBasicConf class is config part for basic part in ModelConfig.json.
@@ -31,8 +33,8 @@ public class ModelBasicConf {
 
     @JsonDeserialize(using = RunModeDeserializer.class)
     public static enum RunMode {
-        LOCAL, DIST, MAPRED // MAPRED is the same as DIST while DIST is better to explain this mode as 'distributed'
-                            // mode.
+        LOCAL, DIST, MAPRED, GCP // MAPRED is the same as DIST while DIST is better to explain this mode as 'distributed'
+                            // mode. GCP mode means that computation will happen on google cloud platform.
     }
 
     /**

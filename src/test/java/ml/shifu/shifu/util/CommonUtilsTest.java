@@ -15,7 +15,6 @@
  */
 package ml.shifu.shifu.util;
 
-import com.google.common.collect.Sets;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,6 +28,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Sets;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -37,13 +41,10 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ml.shifu.shifu.container.obj.ColumnConfig;
 import ml.shifu.shifu.container.obj.ColumnConfig.ColumnFlag;
 import ml.shifu.shifu.container.obj.ColumnType;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
 import ml.shifu.shifu.container.obj.ModelConfig;
 import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
 import ml.shifu.shifu.container.obj.RawSourceData.SourceType;
@@ -68,7 +69,7 @@ public class CommonUtilsTest {
 
     // @Test
     public void syncTest() throws IOException {
-        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, "test", false);
+        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, "test", RunMode.LOCAL);
         config.setModelSetName("testModel");
 
         jsonMapper.writerWithDefaultPrettyPrinter().writeValue(new File("ModelConfig.json"), config);
@@ -153,7 +154,7 @@ public class CommonUtilsTest {
 
     // @Test
     public void syncUpEvalTest() throws IOException {
-        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, "test", false);
+        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, "test", RunMode.LOCAL);
         config.setModelSetName("shifu");
 
         File file = new File("evals/EvalA");
@@ -174,7 +175,7 @@ public class CommonUtilsTest {
 
     @Test
     public void loadModelConfigTest() throws JsonGenerationException, JsonMappingException, IOException {
-        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, "test", false);
+        ModelConfig config = ModelConfig.createInitModelConfig(".", ALGORITHM.NN, "test", RunMode.LOCAL);
         config.setModelSetName("shifu");
 
         jsonMapper.writerWithDefaultPrettyPrinter().writeValue(new File("ModelConfig.json"), config);
@@ -326,7 +327,7 @@ public class CommonUtilsTest {
 
     // @Test
     public void updateColumnConfigFlagsTest() throws IOException {
-        ModelConfig config = ModelConfig.createInitModelConfig("test", ALGORITHM.NN, "test", false);
+        ModelConfig config = ModelConfig.createInitModelConfig("test", ALGORITHM.NN, "test", RunMode.LOCAL);
 
         config.getDataSet().setMetaColumnNameFile("./conf/meta_column_conf.txt");
         config.getVarSelect().setForceRemoveColumnNameFile("./conf/remove_column_list.txt");

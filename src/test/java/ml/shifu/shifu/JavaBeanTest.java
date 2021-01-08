@@ -15,31 +15,64 @@
  */
 package ml.shifu.shifu;
 
-import ml.shifu.shifu.container.*;
-import ml.shifu.shifu.container.BinningObject.DataType;
-import ml.shifu.shifu.container.BinningObject.VariableObjectComparator;
-import ml.shifu.shifu.container.ModelResultObject.ModelResultObjectComparator;
-import ml.shifu.shifu.container.ValueObject.ValueObjectComparator;
-import ml.shifu.shifu.container.meta.MetaGroup;
-import ml.shifu.shifu.container.meta.MetaItem;
-import ml.shifu.shifu.container.meta.ValidateResult;
-import ml.shifu.shifu.container.meta.ValueOption;
-import ml.shifu.shifu.container.obj.*;
-import ml.shifu.shifu.container.obj.ColumnConfig.ColumnConfigComparator;
-import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
-import ml.shifu.shifu.core.Binning.BinningDataType;
-import ml.shifu.shifu.fs.SourceFile;
-import ml.shifu.shifu.message.*;
-import org.apache.commons.io.FileUtils;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.Test;
-
 import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import org.apache.commons.io.FileUtils;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+
+import ml.shifu.shifu.container.BinningObject;
+import ml.shifu.shifu.container.BinningObject.DataType;
+import ml.shifu.shifu.container.BinningObject.VariableObjectComparator;
+import ml.shifu.shifu.container.ColumnScoreObject;
+import ml.shifu.shifu.container.ModelInitInputObject;
+import ml.shifu.shifu.container.ModelResultObject;
+import ml.shifu.shifu.container.ModelResultObject.ModelResultObjectComparator;
+import ml.shifu.shifu.container.PerformanceObject;
+import ml.shifu.shifu.container.ReasonResultObject;
+import ml.shifu.shifu.container.ScoreObject;
+import ml.shifu.shifu.container.ValueObject;
+import ml.shifu.shifu.container.ValueObject.ValueObjectComparator;
+import ml.shifu.shifu.container.VariableStoreObject;
+import ml.shifu.shifu.container.WeightAmplifier;
+import ml.shifu.shifu.container.meta.MetaGroup;
+import ml.shifu.shifu.container.meta.MetaItem;
+import ml.shifu.shifu.container.meta.ValidateResult;
+import ml.shifu.shifu.container.meta.ValueOption;
+import ml.shifu.shifu.container.obj.ColumnBinning;
+import ml.shifu.shifu.container.obj.ColumnConfig;
+import ml.shifu.shifu.container.obj.ColumnConfig.ColumnConfigComparator;
+import ml.shifu.shifu.container.obj.ColumnStats;
+import ml.shifu.shifu.container.obj.EvalConfig;
+import ml.shifu.shifu.container.obj.ModelBasicConf;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.ModelNormalizeConf;
+import ml.shifu.shifu.container.obj.ModelSourceDataConf;
+import ml.shifu.shifu.container.obj.ModelStatsConf;
+import ml.shifu.shifu.container.obj.ModelTrainConf;
+import ml.shifu.shifu.container.obj.ModelTrainConf.ALGORITHM;
+import ml.shifu.shifu.container.obj.ModelVarSelectConf;
+import ml.shifu.shifu.core.Binning.BinningDataType;
+import ml.shifu.shifu.fs.SourceFile;
+import ml.shifu.shifu.message.AkkaActorInputMessage;
+import ml.shifu.shifu.message.ColumnScoreMessage;
+import ml.shifu.shifu.message.EvalResultMessage;
+import ml.shifu.shifu.message.ExceptionMessage;
+import ml.shifu.shifu.message.NormPartRawDataMessage;
+import ml.shifu.shifu.message.NormResultDataMessage;
+import ml.shifu.shifu.message.RunModelDataMessage;
+import ml.shifu.shifu.message.RunModelResultMessage;
+import ml.shifu.shifu.message.StatsPartRawDataMessage;
+import ml.shifu.shifu.message.StatsResultMessage;
+import ml.shifu.shifu.message.StatsValueObjectMessage;
+import ml.shifu.shifu.message.TrainPartDataMessage;
+import ml.shifu.shifu.message.TrainResultMessage;
 
 
 public class JavaBeanTest {
@@ -128,7 +161,7 @@ public class JavaBeanTest {
         voc.compare(valueObject, valueObject2);
         voc.compare(valueObject, valueObject);
 
-        ModelConfig.createInitModelConfig("c", ALGORITHM.NN, "aaa", false);
+        ModelConfig.createInitModelConfig("c", ALGORITHM.NN, "aaa", RunMode.LOCAL);
 
         BinningObject bo = new BinningObject(DataType.Numerical);
         bo.getNumericalData();

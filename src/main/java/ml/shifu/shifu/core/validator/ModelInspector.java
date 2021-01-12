@@ -44,6 +44,8 @@ import ml.shifu.shifu.core.dtrain.FeatureSubsetStrategy;
 import ml.shifu.shifu.core.dtrain.gs.GridSearch;
 import ml.shifu.shifu.fs.ShifuFileUtils;
 import ml.shifu.shifu.util.CommonUtils;
+import ml.shifu.shifu.util.Environment;
+import ml.shifu.shifu.util.GSUtils;
 
 /**
  * ModelInspector class is to do Safety Testing for model.
@@ -948,10 +950,14 @@ public class ModelInspector {
             result.addCause(prefix + "is null or empty - " + dataPath);
         } else if(dataPath.trim().contains("~")) {
             result.addCause(prefix + "contains ~, which is not allowed - " + dataPath);
-        } else if(!ShifuFileUtils.isFileExists(dataPath, sourceType)) {
-            result.addCause(prefix + "doesn't exist - " + dataPath);
-        }
-
+        } else {
+            if (sourceType == SourceType.GS && !GSUtils.isFileExists(Environment.getProperty(Environment.GCP_STORAGE_BUCKET), dataPath)) {
+                result.addCause(prefix + "doesn't exist - " + dataPath);
+            }
+            if (sourceType != SourceType.GS && !ShifuFileUtils.isFileExists(dataPath, sourceType)){
+                result.addCause(prefix + "doesn't exist - " + dataPath);
+            }
+        } 
         return result;
     }
 }

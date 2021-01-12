@@ -15,8 +15,23 @@
  */
 package ml.shifu.shifu.fs;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
@@ -41,6 +56,8 @@ import ml.shifu.shifu.container.obj.EvalConfig;
 import ml.shifu.shifu.container.obj.RawSourceData.SourceType;
 import ml.shifu.shifu.util.CommonUtils;
 import ml.shifu.shifu.util.Constants;
+import ml.shifu.shifu.util.Environment;
+import ml.shifu.shifu.util.GSUtils;
 import ml.shifu.shifu.util.HDFSUtils;
 import ml.shifu.shifu.util.HdfsPartFile;
 
@@ -170,6 +187,10 @@ public class ShifuFileUtils {
      */
     public static BufferedReader getReader(String path, SourceType sourceType) throws IOException {
         try {
+            if (sourceType == SourceType.GS){
+                //if sourceType is google storage bucket
+                return new BufferedReader(new InputStreamReader(GSUtils.getFileInputStream(Environment.getProperty(Environment.GCP_STORAGE_BUCKET), path)));
+            }
             Path filePath = new Path(path);
             return new BufferedReader(new InputStreamReader(getCompressInputStream(
                     getFileSystemBySourceType(sourceType, filePath).open(filePath), filePath),

@@ -2,10 +2,12 @@ package ml.shifu.shifu.util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -127,6 +129,105 @@ public class GSUtils {
         return new CommandExecutionOutput(exitCode, info.get());
     }
 
+    /**
+     * Execute command vi shell, and return input stream based on command output stream
+     * @param command
+     * @return
+     * @throws IOException
+     */
+    private static InputStream getInputStreamByCmdOutput(String command) throws IOException{
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command("sh", "-c", command);
+        Process process = builder.start();
+        return process.getInputStream();
+    }
+
+    /**
+     * Return fully qualified path
+     * @param bucket_name
+     * @param filePath
+     * @return
+     */
+    public static String getFullyQualifiedPath(String bucket_name, String filePath){
+        if (!filePath.startsWith("gs://")){
+            filePath = MessageFormat.format("gs://{0}{1}", bucket_name, filePath);
+        }
+        return filePath;
+    }
+    
+    /**
+     * Return file input stream for file on GCP storage bucket
+     * @param bucket_name
+     * @param filePath
+     * @return
+     * @throws IOException
+     */
+    public static InputStream getFileInputStream(String bucket_name, String filePath) throws IOException{
+        filePath = GSUtils.getFullyQualifiedPath(bucket_name, filePath);
+        String cmd =  MessageFormat.format("gsutil cat {0}", filePath);
+        return GSUtils.getInputStreamByCmdOutput(cmd);
+    }
+
+    /**
+     * Check whether path exists or not in gcp storage bucket
+     * @param bucket_name
+     * @param filePath
+     * @return
+     * @throws IOException
+     */
+    public static boolean isFileExists(String bucket_name, String filePath) throws IOException{
+        try{
+            filePath = GSUtils.getFullyQualifiedPath(bucket_name, filePath);
+            String cmd =  MessageFormat.format("gsutil ls {0}", filePath);
+            CommandExecutionOutput output = GSUtils.executeCommand(cmd);
+            if (output.code != 0){
+                throw new IOException(output.details.stream().collect(Collectors.joining("\n")));
+            }
+            return true;
+        }catch(Exception ex){
+            throw new IOException(ex.getLocalizedMessage(), ex);
+        }
+    }
+
+    /**
+     * 
+     * @param bucket_name
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static GSFileIterator listFiles(String bucket_name, String path) throws IOException{
+        try{
+            if (!path.endsWith("/")){
+                path = path + "/";
+            }
+            String fullQualifiedPath = GSUtils.getFullyQualifiedPath(bucket_name, path);
+            String cmd = MessageFormat.format("gsutil du {0}", fullQualifiedPath);
+            CommandExecutionOutput output = GSUtils.executeCommand(cmd);
+            List<GSFileItem> items = new ArrayList<GSFileItem>();
+            GSFileIterator iter = new GSFileIterator(items);
+            if (output.code == 0){
+                List<String> entries = output.details;
+                for(String entry : entries){
+                    String[] fileInfo = StringUtils.split(entry, " ");
+                    if (fileInfo.length != 2){
+                        continue;
+                    }
+                    if (fileInfo[1].endsWith("/")){
+                        continue;
+                    }
+                    String fileName = StringUtils.removeStart(fileInfo[1], fullQualifiedPath);
+                    if (!StringUtils.contains(fileName, "/")){
+                        items.add(new GSFileItem(fileInfo[1], Long.parseLong(fileInfo[0]), fileName));
+                    }
+                }
+            }
+            return iter;
+        }catch(Exception ex){
+            throw new IOException(ex.getLocalizedMessage(), ex);
+        }
+        
+    }
 
     /**
      * CommandExecutionOutput is the holder of command execution result
@@ -156,6 +257,48 @@ public class GSUtils {
         @Override
         public void run(){
             new BufferedReader(new InputStreamReader(inputStream)).lines().forEach(consumer);
+        }
+    }
+
+    public static class GSFileIterator implements Iterator<GSFileItem>{
+        private List<GSFileItem> children;
+        private int index = 0;
+        public GSFileIterator(List<GSFileItem> children){
+            this.children = children;
+            this.index = 0;
+        }
+        @Override
+        public boolean hasNext(){
+            return index <= (this.children.size()-1);
+        }
+
+        @Override
+        public GSFileItem next(){
+            return children.get(index++);
+        }
+    }
+
+    public static class GSFileItem{
+        private String path;
+        private long size;
+        private String fileName;
+
+        public GSFileItem(String path, long size, String fileName){
+            this.path = path;
+            this.size = size;
+            this.fileName = fileName;
+        }
+
+        public String getPath(){
+            return this.path;
+        }
+
+        public long getSize(){
+            return this.size;
+        }
+
+        public String getName(){
+            return this.fileName;
         }
     }
 

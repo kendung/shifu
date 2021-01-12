@@ -34,6 +34,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.io.IOUtils;
@@ -51,11 +56,6 @@ import org.encog.mathutil.BoundMath;
 import org.encog.ml.BasicML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
 
 import ml.shifu.guagua.util.NumberFormatUtils;
 import ml.shifu.shifu.column.NSColumn;
@@ -1574,29 +1574,44 @@ public final class CommonUtils {
         }
 
         String firstValidFile = null;
-        Path filePath = new Path(dataSetRawPath);
-        FileSystem fs = ShifuFileUtils.getFileSystemBySourceType(source, filePath);
-        FileStatus[] globStatus = fs.globStatus(filePath, HiddenPathFilter.getHiddenPathFilter());
-        if(globStatus == null || globStatus.length == 0) {
-            throw new IllegalArgumentException("No files founded in " + dataSetRawPath);
+        if (source == SourceType.GS){
+            GSUtils.GSFileIterator iterator = GSUtils.listFiles(Environment.getProperty(Environment.GCP_STORAGE_BUCKET), dataSetRawPath);
+            while(iterator.hasNext()){
+                GSUtils.GSFileItem gsfi = iterator.next();
+                String name = gsfi.getName();
+                if (name.endsWith("_") || name.startsWith(".")) {
+                    continue;
+                }
+                if(gsfi.getSize() > 20L) {
+                    firstValidFile = gsfi.getPath();
+                    break;
+                }
+            }
         } else {
-            for(FileStatus fileStatus: globStatus) {
-                RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(fileStatus.getPath(), true);
-                while(iterator.hasNext()) {
-                    LocatedFileStatus lfs = iterator.next();
-                    String name = lfs.getPath().getName();
-                    if(name.startsWith("_") || name.startsWith(".")) {
-                        // hidden files,
-                        continue;
+            Path filePath = new Path(dataSetRawPath);
+            FileSystem fs = ShifuFileUtils.getFileSystemBySourceType(source, filePath);
+            FileStatus[] globStatus = fs.globStatus(filePath, HiddenPathFilter.getHiddenPathFilter());
+            if(globStatus == null || globStatus.length == 0) {
+                throw new IllegalArgumentException("No files founded in " + dataSetRawPath);
+            } else {
+                for(FileStatus fileStatus: globStatus) {
+                    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(fileStatus.getPath(), true);
+                    while(iterator.hasNext()) {
+                        LocatedFileStatus lfs = iterator.next();
+                        String name = lfs.getPath().getName();
+                        if(name.startsWith("_") || name.startsWith(".")) {
+                            // hidden files,
+                            continue;
+                        }
+                        // 20L is min gzip file size
+                        if(lfs.getLen() > 20L) {
+                            firstValidFile = lfs.getPath().toString();
+                            break;
+                        }
                     }
-                    // 20L is min gzip file size
-                    if(lfs.getLen() > 20L) {
-                        firstValidFile = lfs.getPath().toString();
+                    if(StringUtils.isNotBlank(firstValidFile)) {
                         break;
                     }
-                }
-                if(StringUtils.isNotBlank(firstValidFile)) {
-                    break;
                 }
             }
         }

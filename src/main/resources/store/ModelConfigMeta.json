@@ -24,7 +24,8 @@
                 "options": [ 
                     {"label":"local mode", "value":"local"},
                     {"label":"mapred mode", "value":"mapred"},
-                    {"label":"distributed/mapred mode", "value":"dist"}
+                    {"label":"distributed/mapred mode", "value":"dist"},
+                    {"label":"gcp mode", "value":"gcp"}
                 ]
             }, {
                 "name" : "version",
@@ -59,7 +60,8 @@
                 "options": [ 
                     {"label": "hdfs", "value":"HDFS"},
                     {"label": "local", "value":"LOCAL"},
-                    {"label": "s3", "value":"S3"}
+                    {"label": "s3", "value":"S3"},
+                    {"label": "gs", "value":"GS"}
                 ]
             }, {
                 "name": "dataPath",

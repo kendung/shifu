@@ -800,7 +800,7 @@ public class ModelConfig {
 
     @JsonIgnore
     public boolean isMapReduceRunMode() {
-        return RunMode.MAPRED == basic.getRunMode() || RunMode.DIST == basic.getRunMode();
+        return RunMode.MAPRED == basic.getRunMode() || RunMode.DIST == basic.getRunMode() || RunMode.GCP == basic.getRunMode();
     }
 
     @JsonIgnore

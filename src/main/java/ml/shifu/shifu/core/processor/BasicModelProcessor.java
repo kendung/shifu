@@ -15,6 +15,30 @@
  */
 package ml.shifu.shifu.core.processor;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ml.shifu.shifu.column.NSColumn;
 import ml.shifu.shifu.column.NSColumnUtils;
 import ml.shifu.shifu.container.meta.ValidateResult;
@@ -38,17 +62,6 @@ import ml.shifu.shifu.util.Constants;
 import ml.shifu.shifu.util.Environment;
 import ml.shifu.shifu.util.JSONUtils;
 import ml.shifu.shifu.util.updater.ColumnConfigUpdater;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * Model Basic Processor, it helps to do basic manipulate in model, including load/save configuration, copy
@@ -388,6 +401,9 @@ public class BasicModelProcessor {
     public boolean syncDataToHdfs(SourceType sourceType) throws IOException {
         if(SourceType.HDFS.equals(sourceType)) {
             CommonUtils.copyConfFromLocalToHDFS(modelConfig, this.pathFinder);
+            return true;
+        } else if(SourceType.GS.equals(sourceType)) {
+            CommonUtils.copyConfFromLocalToGS(modelConfig, this.pathFinder);
             return true;
         }
 

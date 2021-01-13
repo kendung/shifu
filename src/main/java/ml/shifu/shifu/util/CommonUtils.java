@@ -163,6 +163,79 @@ public final class CommonUtils {
         return true;
     }
 
+     /**
+     * Sync up all local configuration files to Google Storage Bucket.
+     *
+     * @param modelConfig
+     *            the model config
+     * @param pathFinder
+     *            the path finder to locate file
+     * @return if copy successful
+     *
+     * @throws IOException
+     *             If any exception on Google Storage bucket IO or local IO.
+     *
+     * @throws NullPointerException
+     *             If parameter {@code modelConfig} is null
+     */
+    public static boolean copyConfFromLocalToGS(ModelConfig modelConfig, PathFinder pathFinder) throws IOException{
+        try{
+            FileSystem localFs = HDFSUtils.getLocalFS();
+            String storageBucket = Environment.getProperty(Environment.GCP_STORAGE_BUCKET);
+            String gsModelSetPath = pathFinder.getModelSetPath(SourceType.GS);
+            //copy ModelConfig.json
+            String srcModelConfig = pathFinder.getModelConfigPath(SourceType.LOCAL);
+            String destModelConfig = new Path(gsModelSetPath, Constants.MODEL_CONFIG_JSON_FILE_NAME).toString();
+            GSUtils.copyFromLocalFile(srcModelConfig, storageBucket, destModelConfig);
+            //copy GridSearch config file if exists
+            String gridConfigFile = modelConfig.getTrain().getGridConfigFile();
+            if(gridConfigFile != null && !gridConfigFile.trim().equals("")) {
+                GSUtils.copyFromLocalFile(gridConfigFile, storageBucket, gsModelSetPath);
+            }
+            //copy ColumnConfig.json
+            if(modelConfig.isMultiTask()) {
+                copyConfFromLocalToGS(modelConfig);
+            } else {
+                String srcColumnConfig = pathFinder.getColumnConfigPath(SourceType.LOCAL);
+                String dstColumnConfig = pathFinder.getColumnConfigPath(SourceType.GS);
+                if(ShifuFileUtils.isFileExists(srcColumnConfig.toString(), SourceType.LOCAL)) {
+                    GSUtils.copyFromLocalFile(srcColumnConfig, storageBucket, dstColumnConfig);
+                }
+            }
+            // Copy column related config files
+            copyColumnConfigFilesToGS(modelConfig, new Path(gsModelSetPath));
+
+            // Copy others
+            Path srcVersion = new Path(pathFinder.getModelVersion(SourceType.LOCAL));
+            if(localFs.exists(srcVersion)) {
+                Path dstVersion = new Path(pathFinder.getModelVersion(SourceType.GS));
+                GSUtils.copyFromLocalFile(srcVersion.toString(), storageBucket, dstVersion.toString());
+            }
+
+            // Copy Models
+            Path srcModels = new Path(pathFinder.getModelsPath(SourceType.LOCAL));
+            if(localFs.exists(srcModels)) {
+                Path dstModels = new Path(pathFinder.getModelsPath(SourceType.GS));
+                GSUtils.copyFromLocalFile(srcModels.toString(), storageBucket, dstModels.toString());
+            }
+
+            // Copy EvalSets
+            Path evalsPath = new Path(pathFinder.getEvalsPath(SourceType.LOCAL));
+            if(localFs.exists(evalsPath)) {
+                for(FileStatus evalset: localFs.listStatus(evalsPath)) {
+                    EvalConfig evalConfig = modelConfig.getEvalConfigByName(evalset.getPath().getName());
+                    if(evalConfig != null) {
+                        copyEvalDataFromLocalToHDFS(modelConfig, evalConfig.getName());
+                    }
+                }
+            }
+            return true;
+        }catch(Exception ex){
+            throw new IOException(ex.getLocalizedMessage(), ex);
+        }
+        
+    }
+
     private static void copyMTLColumnConfigs(ModelConfig modelConfig, FileSystem hdfs, Path hdfsMSPath)
             throws IOException {
         PathFinder pf = new PathFinder(modelConfig);
@@ -173,6 +246,23 @@ public final class CommonUtils {
             Path srcPath = new Path(pf.getMTLColumnConfigPath(SourceType.LOCAL, i));
             hdfs.copyFromLocalFile(srcPath, mtlHDFSPath);
         }
+    }
+
+    private static void copyConfFromLocalToGS(ModelConfig modelConfig)
+            throws IOException {
+        try{
+            PathFinder pf = new PathFinder(modelConfig);
+            Path mtlGSPath = new Path(pf.getMTLColumnConfigFolder(SourceType.GS));
+            List<String> tagColumnNames = modelConfig.getMultiTaskTargetColumnNames();
+            String gsBucket = Environment.getProperty(Environment.GCP_STORAGE_BUCKET);
+            for(int i = 0; i < tagColumnNames.size(); i++) {
+                Path srcPath = new Path(pf.getMTLColumnConfigPath(SourceType.LOCAL, i));
+                GSUtils.copyFromLocalFile(srcPath.toString(), gsBucket, mtlGSPath.toString());
+            }
+        }catch(Exception ex){
+            throw new IOException(ex.getLocalizedMessage(), ex);
+        }
+        
     }
 
     private static void copyColumnConfigFiles(ModelConfig modelConfig, FileSystem hdfs, Path hdfsMSPath)
@@ -201,6 +291,47 @@ public final class CommonUtils {
             hdfs.copyFromLocalFile(new Path(modelConfig.getDataSet().getSegExpressionFile()), colFilePath);
         }
     }
+
+
+    private static void copyColumnConfigFilesToGS(ModelConfig modelConfig, Path gsMSPath)
+            throws IOException {
+        try {
+            String colFilePath = gsMSPath.toString();
+            String gsBucket = Environment.getProperty(Environment.GCP_STORAGE_BUCKET);
+            String categoricalColNameFile = modelConfig.getDataSet().getCategoricalColumnNameFile();
+            if(StringUtils.isNotBlank(categoricalColNameFile)) {
+                GSUtils.copyFromLocalFile(categoricalColNameFile, gsBucket, new Path(colFilePath,categoricalColNameFile).toString());
+            }
+            String metaColNameFile = modelConfig.getDataSet().getMetaColumnNameFile();
+            if(StringUtils.isNotBlank(metaColNameFile)) {
+                GSUtils.copyFromLocalFile(metaColNameFile, gsBucket, new Path(colFilePath, metaColNameFile).toString());
+            }
+            String forceSelectColNameFile = modelConfig.getVarSelect().getForceSelectColumnNameFile();
+            if(StringUtils.isNotBlank(forceSelectColNameFile)) {
+                GSUtils.copyFromLocalFile(forceSelectColNameFile, gsBucket, new Path(colFilePath, forceSelectColNameFile).toString());
+            }
+            String candColNameFile = modelConfig.getVarSelect().getCandidateColumnNameFile();
+            if(StringUtils.isNotBlank(candColNameFile)) {
+                GSUtils.copyFromLocalFile(candColNameFile, gsBucket, new Path(colFilePath, candColNameFile).toString());
+            }
+            String forceRemoveColNameFile = modelConfig.getVarSelect().getForceRemoveColumnNameFile();
+            if(StringUtils.isNotBlank(forceRemoveColNameFile)) {
+                GSUtils.copyFromLocalFile(forceRemoveColNameFile, gsBucket, new Path(colFilePath, forceRemoveColNameFile).toString());
+            }
+            String hybridColNameFile = modelConfig.getDataSet().getHybridColumnNameFile();
+            if(StringUtils.isNotBlank(hybridColNameFile)) {
+                GSUtils.copyFromLocalFile(hybridColNameFile, gsBucket, new Path(colFilePath, hybridColNameFile).toString());
+            }
+            String segExpreFile = modelConfig.getDataSet().getSegExpressionFile();
+            if(StringUtils.isNotBlank(segExpreFile)) {
+                GSUtils.copyFromLocalFile(segExpreFile, gsBucket, new Path(colFilePath, segExpreFile).toString());
+        }
+        }catch (Exception ex){
+            throw new IOException(ex.getLocalizedMessage(), ex);
+        }
+    }
+
+    
 
     /**
      * Sync-up the evaluation data into HDFS

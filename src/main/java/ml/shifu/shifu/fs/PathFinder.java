@@ -15,18 +15,19 @@
  */
 package ml.shifu.shifu.fs;
 
-import ml.shifu.shifu.container.obj.EvalConfig;
-import ml.shifu.shifu.container.obj.ModelConfig;
-import ml.shifu.shifu.container.obj.RawSourceData.SourceType;
-import ml.shifu.shifu.util.Constants;
-import ml.shifu.shifu.util.Environment;
+import java.io.File;
+import java.util.Map;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.pig.impl.util.JarManager;
 
-import java.io.File;
-import java.util.Map;
+import ml.shifu.shifu.container.obj.EvalConfig;
+import ml.shifu.shifu.container.obj.ModelConfig;
+import ml.shifu.shifu.container.obj.RawSourceData.SourceType;
+import ml.shifu.shifu.util.Constants;
+import ml.shifu.shifu.util.Environment;
 
 /**
  * {@link PathFinder} is used to obtain all files which can be used in our framework. Some are used for training,
@@ -612,6 +613,8 @@ public class PathFinder {
                 return new Path(this.getModelSetLocalPath(), Constants.BACKUPNAME).toString();
             case HDFS:
                 return new Path(this.getModelSetHdfsPath(), Constants.BACKUPNAME).toString();
+            case GS:
+                return new Path(this.getModelSetGSPath(), Constants.BACKUPNAME).toString();
             default:
                 // Others, maybe be we will support S3 in future
                 throw new NotImplementedException("Source type - " + sourceType.name() + " is not supported yet!");
@@ -915,6 +918,8 @@ public class PathFinder {
                 return this.getModelSetLocalPath().toString();
             case HDFS:
                 return this.getModelSetHdfsPath().toString();
+            case GS:
+                return this.getModelSetGSPath().toString();
             default:
                 // Others, maybe be we will support S3 in future
                 throw new NotImplementedException("Source type - " + sourceType.name() + " is not supported yet!");
@@ -944,6 +949,18 @@ public class PathFinder {
                 : new Path(modelSetPath, modelConfig.getBasic().getName()));
     }
 
+
+    /**
+     * Get the GS home directory for Model
+     * @return the Path of Google storage home directory
+     */
+    private Path getModelSetGSPath() {
+        String modelSetPath = this.getPreferPath(modelConfig.getBasic().getCustomPaths(),
+        Constants.KEY_GS_MODEL_SET_PATH);
+        return (StringUtils.isBlank(modelSetPath) ? new Path(Constants.MODEL_SETS, modelConfig.getBasic().getName())
+                : new Path(modelSetPath, modelConfig.getBasic().getName()));
+    }
+
     /**
      * Get the relative path to model home directory by source type
      *
@@ -961,6 +978,8 @@ public class PathFinder {
                 Path filePath = new Path(getModelSetHdfsPath(), path);
                 return ShifuFileUtils.getFileSystemBySourceType(sourceType, filePath)
                         .makeQualified(filePath).toString();
+            case GS:
+                 return new Path(getModelSetGSPath(), path).toString();
             default:
                 // Others, maybe be we will support S3 in future
                 throw new NotImplementedException("Source type - " + sourceType.name() + " is not supported yet!");

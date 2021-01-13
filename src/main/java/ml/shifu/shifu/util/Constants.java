@@ -124,6 +124,7 @@ public interface Constants {
     public static final String EVAL_MATRIX = "EvalConfusionMatrix";
 
     public static final String KEY_HDFS_MODEL_SET_PATH = "hdfsModelSetPath";
+    public static final String KEY_GS_MODEL_SET_PATH = "gsModelSetPath";
     public static final String KEY_MODELS_PATH = "modelsPath";
     public static final String KEY_SCORE_PATH = "scorePath";
     public static final String KEY_PERFORMANCE_PATH = "performancePath";

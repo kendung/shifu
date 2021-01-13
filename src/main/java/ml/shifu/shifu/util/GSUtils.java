@@ -47,6 +47,9 @@ public class GSUtils {
             throw new Exception("Please specify GCP bucket name via environment variable GS_BUCKET.");
         }
         if (bucketExists(bucket_name)){
+            if (!StringUtils.startsWith(destDirectory, "/")) {
+                destDirectory = "/" + destDirectory;
+            }
             String gsutilCmd = MessageFormat.format("gsutil cp -r {0} gs://{1}{2}", srcDirectory, bucket_name, destDirectory );
             CommandExecutionOutput output = executeCommand(gsutilCmd);
             if (output != null && output.code != 0){

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,7 @@ import ml.shifu.shifu.container.obj.RawSourceData.SourceType;
 import ml.shifu.shifu.core.dtrain.CommonConstants;
 import ml.shifu.shifu.fs.PathFinder;
 import ml.shifu.shifu.util.CommonUtils;
+import ml.shifu.shifu.util.Environment;
 import ml.shifu.shifu.util.GSUtils;
 import ml.shifu.shifu.util.GSUtils.CommandExecutionOutput;
 
@@ -121,7 +123,16 @@ public class DataProcExecutor {
                     log.info("Pig script absolute path is {}", pigScriptPath);
                     String commandTemplate = "gcloud dataproc jobs submit pig --cluster={0} --file={1} --params={2}";
                     List<String> paramsList = new ArrayList<String>();
-                    pigParamsMap.entrySet().stream().forEach(e -> {paramsList.add(e.getKey() + "=" + e.getValue());});
+                    String bucketName = Environment.getProperty(Environment.GCP_STORAGE_BUCKET);
+                    pigParamsMap.entrySet().stream().forEach(e -> {
+                        if (e.getKey() == "delimiter" || e.getKey() == "output_delimiter"){
+                            paramsList.add(e.getKey() + "=\"" + e.getValue() + "\"");
+                        }else if (StringUtils.startsWith(e.getKey().toLowerCase(), "path")){
+                            paramsList.add(e.getKey() + "=" + GSUtils.getFullyQualifiedPath(bucketName, e.getValue()));
+                        }else{
+                            paramsList.add(e.getKey() + "=" + e.getValue());
+                        }
+                    });
                     String command = MessageFormat.format(commandTemplate, "cluster-ken-testing", pigScriptPath, paramsList.stream().collect(Collectors.joining(",")));
                     try{
                         log.debug("Pig submit command: {}", command);

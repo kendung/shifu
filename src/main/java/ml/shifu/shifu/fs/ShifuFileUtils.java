@@ -58,6 +58,8 @@ import ml.shifu.shifu.util.CommonUtils;
 import ml.shifu.shifu.util.Constants;
 import ml.shifu.shifu.util.Environment;
 import ml.shifu.shifu.util.GSUtils;
+import ml.shifu.shifu.util.GSUtils.GSFileItem;
+import ml.shifu.shifu.util.GSUtils.GSFileIterator;
 import ml.shifu.shifu.util.HDFSUtils;
 import ml.shifu.shifu.util.HdfsPartFile;
 
@@ -689,7 +691,11 @@ public class ShifuFileUtils {
     }
 
     public static FileStatus[] getFilePartStatus(String filePath, SourceType sourceType) throws IOException {
-        return getFilePartStatus(filePath, sourceType, Constants.HADOOP_PART_PREFIX);
+        if (sourceType == SourceType.GS){
+            return getBucketFilePartStatus(filePath, Constants.HADOOP_PART_PREFIX);
+        } else {
+            return getFilePartStatus(filePath, sourceType, Constants.HADOOP_PART_PREFIX);
+        }
     }
 
     public static FileStatus[] getFilePartStatus(String filePath, SourceType sourceType, final String partFilePrefix)
@@ -720,6 +726,28 @@ public class ShifuFileUtils {
         }
 
         return fileStatsArr;
+    }
+
+    /**
+     * Get part status for the files on google storage bucket
+     * @param filePath
+     * @param partFilePrefix
+     * @return
+     * @throws IOException
+     */
+    public static FileStatus[] getBucketFilePartStatus(String filePath, final String partFilePrefix)
+            throws IOException {
+        String bucketName = Environment.getProperty(Environment.GCP_STORAGE_BUCKET);
+        GSFileIterator iterator = GSUtils.listFiles(bucketName, filePath);
+        List<FileStatus> fileStatsArr = new ArrayList<FileStatus>();
+        while(iterator.hasNext()) {
+            GSFileItem item = iterator.next();
+            FileStatus status = new FileStatus(item.getSize(), false, 0, 0, 0, 0, null, null, null, new Path(item.getPath()));
+            fileStatsArr.add(status);
+        }
+        FileStatus[] result = new FileStatus[fileStatsArr.size()];
+        fileStatsArr.toArray(result);
+        return result;
     }
 
     public static List<FileStatus> getFileStatus(String filePath, SourceType sourceType) throws IOException {

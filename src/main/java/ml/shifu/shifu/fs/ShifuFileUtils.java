@@ -574,9 +574,20 @@ public class ShifuFileUtils {
      *             - if any I/O exception in processing
      */
     public static boolean deleteFile(String path, SourceType sourceType) throws IOException {
-        Path filePath = new Path(path);
-        FileSystem fs = getFileSystemBySourceType(sourceType, filePath);
-        return fs.delete(filePath, true);
+        if (sourceType == SourceType.GS){
+            try{
+                String bucketName = Environment.getProperty(Environment.GCP_STORAGE_BUCKET);
+                GSUtils.deleteFile(bucketName, path);
+                return true;
+            }catch (Exception ex){
+                throw new IOException(ex.getLocalizedMessage(), ex);
+            }
+        }else{
+            Path filePath = new Path(path);
+            FileSystem fs = getFileSystemBySourceType(sourceType, filePath);
+            return fs.delete(filePath, true);
+        }
+        
     }
 
     /**

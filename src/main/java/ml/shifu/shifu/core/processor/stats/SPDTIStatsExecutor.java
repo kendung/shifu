@@ -18,16 +18,18 @@ package ml.shifu.shifu.core.processor.stats;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ml.shifu.shifu.container.obj.ColumnConfig;
+import ml.shifu.shifu.container.obj.ModelBasicConf.RunMode;
 import ml.shifu.shifu.container.obj.ModelConfig;
 import ml.shifu.shifu.core.dtrain.CommonConstants;
 import ml.shifu.shifu.core.processor.BasicModelProcessor;
+import ml.shifu.shifu.dataproc.DataProcExecutor;
 import ml.shifu.shifu.fs.ShifuFileUtils;
 import ml.shifu.shifu.pig.PigExecutor;
 import ml.shifu.shifu.util.Environment;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by zhanhu on 7/1/16.
@@ -61,8 +63,13 @@ public class SPDTIStatsExecutor extends MapReducerStatsWorker {
                         modelConfig.getDataSet().getSource());
             }
 
-            PigExecutor.getExecutor().submitJob(modelConfig, pathFinder.getScriptPath("scripts/StatsSpdtI.pig"),
-                    paramsMap, modelConfig.getDataSet().getSource(), super.pathFinder);
+            if (modelConfig.getBasic().getRunMode() == RunMode.GCP){
+                DataProcExecutor.getExecutor().submitPigJob(modelConfig, pathFinder.getScriptPath("scripts/StatsSpdtI.pig"), 
+                paramsMap, modelConfig.getDataSet().getSource(), super.pathFinder);
+            }else{
+                PigExecutor.getExecutor().submitJob(modelConfig, pathFinder.getScriptPath("scripts/StatsSpdtI.pig"),
+                paramsMap, modelConfig.getDataSet().getSource(), super.pathFinder);
+            }
         }
         // update
         log.info("Updating binning info ...");

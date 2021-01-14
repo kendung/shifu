@@ -164,6 +164,7 @@
                 <include>*:hadoop-common:*</include>
                 <include>*:commons-configuration:*</include>
                 <include>*:hadoop-auth:*</include>
+                <include>*:hadoop-mapreduce-client-core:*</include>
             </includes>
         </dependencySet>
         <dependencySet>

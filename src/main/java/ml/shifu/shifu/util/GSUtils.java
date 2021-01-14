@@ -58,6 +58,38 @@ public class GSUtils {
         }
     }
 
+
+    /**
+     * Delete file/directory at destPath
+     * @param bucket_name
+     * @param destPath
+     * @throws Exception
+     */
+    public static void deleteFile(String bucket_name, String destPath) throws Exception{
+        if (StringUtils.isBlank(bucket_name)){
+            throw new Exception("Please specify GCP bucket name via environment variable GS_BUCKET.");
+        }
+        boolean pathExists = false;
+        try{
+            pathExists = isFileExists(bucket_name, destPath);
+        }catch(IOException io){
+            String msg = io.getLocalizedMessage().toLowerCase();
+            if (!StringUtils.contains(msg, "one or more urls matched no objects")){
+                throw io;
+            }
+        }
+        if (bucketExists(bucket_name) && pathExists){
+            if (!StringUtils.startsWith(destPath, "/")) {
+                destPath = "/" + destPath;
+            }
+            String gsutilCmd = MessageFormat.format("gsutil rm -r gs://{0}{1}", bucket_name, destPath );
+            CommandExecutionOutput output = executeCommand(gsutilCmd);
+            if (output != null && output.code != 0){
+                throw new Exception(output.details.stream().collect(Collectors.joining("\n")));
+            }
+        }
+    }
+
     /**
      * Check whether bucket exists or not
      * @param bucket_name
@@ -153,6 +185,9 @@ public class GSUtils {
      */
     public static String getFullyQualifiedPath(String bucket_name, String filePath){
         if (!filePath.startsWith("gs://")){
+            if (!StringUtils.startsWith(filePath, "/")){
+                filePath = "/" + filePath;
+            }
             filePath = MessageFormat.format("gs://{0}{1}", bucket_name, filePath);
         }
         return filePath;
@@ -237,12 +272,20 @@ public class GSUtils {
      * code represents the exit code of the command process
      * details represents the command execution details
      */
-    private static class CommandExecutionOutput{
+    public static class CommandExecutionOutput{
         private int code;
         private List<String> details;
         public CommandExecutionOutput(int code, List<String> details){
             this.code = code;
             this.details = details;
+        }
+
+        public int getCode(){
+            return code;
+        }
+
+        public List<String> getDetails(){
+            return details;
         }
     }
     /**

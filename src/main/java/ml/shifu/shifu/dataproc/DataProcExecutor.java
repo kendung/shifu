@@ -18,6 +18,7 @@ import ml.shifu.shifu.container.obj.RawSourceData.SourceType;
 import ml.shifu.shifu.core.dtrain.CommonConstants;
 import ml.shifu.shifu.fs.PathFinder;
 import ml.shifu.shifu.util.CommonUtils;
+import ml.shifu.shifu.util.Constants;
 import ml.shifu.shifu.util.Environment;
 import ml.shifu.shifu.util.GSUtils;
 import ml.shifu.shifu.util.GSUtils.CommandExecutionOutput;
@@ -127,7 +128,7 @@ public class DataProcExecutor {
                     pigParamsMap.entrySet().stream().forEach(e -> {
                         if (e.getKey() == "delimiter" || e.getKey() == "output_delimiter"){
                             paramsList.add(e.getKey() + "=\"" + e.getValue() + "\"");
-                        }else if (StringUtils.startsWith(e.getKey().toLowerCase(), "path")){
+                        }else if (StringUtils.startsWith(e.getKey().toLowerCase(), "path") && e.getKey() != Constants.PATH_JAR){
                             paramsList.add(e.getKey() + "=" + GSUtils.getFullyQualifiedPath(bucketName, e.getValue()));
                         }else{
                             paramsList.add(e.getKey() + "=" + e.getValue());

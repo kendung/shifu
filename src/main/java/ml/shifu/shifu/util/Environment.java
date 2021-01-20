@@ -58,6 +58,8 @@ public class Environment {
 
     public static final String GCP_STORAGE_BUCKET = "GS_BUCKET";
 
+    public static final String GCP_DATAPROC_CLUSTER = "DATAPROC_CLUSTER";
+
     private static Logger logger = LoggerFactory.getLogger(Environment.class);
     private static Properties properties = new Properties();
 

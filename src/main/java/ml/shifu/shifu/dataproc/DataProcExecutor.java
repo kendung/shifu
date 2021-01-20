@@ -130,11 +130,14 @@ public class DataProcExecutor {
                             paramsList.add(e.getKey() + "=\"" + e.getValue() + "\"");
                         }else if (StringUtils.startsWith(e.getKey().toLowerCase(), "path") && e.getKey() != Constants.PATH_JAR){
                             paramsList.add(e.getKey() + "=" + GSUtils.getFullyQualifiedPath(bucketName, e.getValue()));
+                        }else if (e.getKey() == Constants.PATH_JAR){
+                            paramsList.add(e.getKey() + "=" + GSUtils.getFullyQualifiedPath(bucketName, "/shifu/libs/*.jar"));
                         }else{
                             paramsList.add(e.getKey() + "=" + e.getValue());
                         }
                     });
-                    String command = MessageFormat.format(commandTemplate, "cluster-ken-testing", pigScriptPath, paramsList.stream().collect(Collectors.joining(",")));
+                    String command = MessageFormat.format(commandTemplate, Environment.getProperty(Environment.GCP_DATAPROC_CLUSTER), 
+                                                          pigScriptPath, paramsList.stream().collect(Collectors.joining(",")));
                     try{
                         log.debug("Pig submit command: {}", command);
                         CommandExecutionOutput output =GSUtils.executeCommand(command);

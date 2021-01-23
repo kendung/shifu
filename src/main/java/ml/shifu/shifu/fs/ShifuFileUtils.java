@@ -191,7 +191,7 @@ public class ShifuFileUtils {
         try {
             if (sourceType == SourceType.GS){
                 //if sourceType is google storage bucket
-                return new BufferedReader(new InputStreamReader(GSUtils.getFileInputStream(Environment.getProperty(Environment.GCP_STORAGE_BUCKET), path)));
+                return new BufferedReader(new InputStreamReader(GSUtils.getFileInputStream(Environment.getProperty(Environment.GCP_STORAGE_BUCKET), path), Constants.DEFAULT_CHARSET));
             }
             Path filePath = new Path(path);
             return new BufferedReader(new InputStreamReader(getCompressInputStream(

@@ -87,9 +87,13 @@ public class Environment {
         }
         properties.put(SYSTEM_USER, (StringUtils.isBlank(user) ? "" : user));
 
-        // load environment vairable GS_BUCKET
+        // load environment variable GS_BUCKET
         String gsBucket = ((System.getenv(GCP_STORAGE_BUCKET) == null) ? System.getProperty(GCP_STORAGE_BUCKET) : System.getenv(GCP_STORAGE_BUCKET));
         properties.put(GCP_STORAGE_BUCKET, (StringUtils.isBlank(gsBucket) ? "" : gsBucket));
+
+        // load environment variable DATAPROC_CLUSTER
+        String dataProcCluster = ((System.getenv(GCP_DATAPROC_CLUSTER) == null) ? System.getProperty(GCP_DATAPROC_CLUSTER) : System.getenv(GCP_DATAPROC_CLUSTER));
+        properties.put(GCP_DATAPROC_CLUSTER, (StringUtils.isBlank(dataProcCluster) ? "" : dataProcCluster));
     }
 
     /*

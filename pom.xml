@@ -88,7 +88,23 @@
 		<url>https://github.com/shifuml/shifu.git</url>
 		<tag>shifu-0.12.0</tag>
 	</scm>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>libraries-bom</artifactId>
+			<version>16.3.0</version>
+			<type>pom</type>
+			<scope>import</scope>
+			</dependency>
+		</dependencies>
+    </dependencyManagement>
+
 	<dependencies>
+		<dependency>
+    		<groupId>com.google.cloud</groupId>
+    		<artifactId>google-cloud-storage</artifactId>
+ 		</dependency>
 		<dependency>
 			<groupId>jline</groupId>
 			<artifactId>jline</artifactId>
@@ -118,7 +134,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>14.0.1</version>
+			<version>20.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.encog</groupId>

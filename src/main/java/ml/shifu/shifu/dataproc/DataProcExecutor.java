@@ -132,6 +132,8 @@ public class DataProcExecutor {
                             paramsList.add(e.getKey() + "=" + GSUtils.getFullyQualifiedPath(bucketName, e.getValue()));
                         }else if (e.getKey() == Constants.PATH_JAR){
                             paramsList.add(e.getKey() + "=" + GSUtils.getFullyQualifiedPath(bucketName, "/shifu/libs/*.jar"));
+                        }else if (e.getKey() == Constants.SOURCE_TYPE){
+                            paramsList.add(e.getKey() + "=" + SourceType.HDFS);
                         }else{
                             paramsList.add(e.getKey() + "=" + e.getValue());
                         }

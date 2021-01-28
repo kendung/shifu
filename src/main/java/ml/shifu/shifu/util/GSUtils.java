@@ -14,6 +14,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -25,6 +29,8 @@ import org.apache.commons.lang.StringUtils;
  * gsutil cp -r ./DataSet1 gs://${existing_bucket_name}/user/xuedeng/cancer-judgement/DataSet1
  */
 public class GSUtils {
+
+    public static Storage storage = StorageOptions.getDefaultInstance().getService();
 
     private GSUtils(){
          // prevent new GSUtils();
@@ -97,22 +103,11 @@ public class GSUtils {
      * @throws Exception
      */
     public static boolean bucketExists(String bucket_name) throws Exception{
-        String gsutilCmd = MessageFormat.format("gsutil ls gs://{0}", bucket_name);
-        CommandExecutionOutput output = executeCommand(gsutilCmd);
-        if (output != null && output.code != 0){
-            throw new Exception(output.details.stream().collect(Collectors.joining("\n")));
+        Bucket bucket = storage.get(bucket_name);
+        if (bucket != null){
+            return true;
         }
-        boolean bucketExists = true;
-        for(String msg : output.details){
-            if (msg.startsWith("BucketNotFoundException")){
-                bucketExists = false;
-                break;
-            }
-        }
-        if (!bucketExists){
-            throw new Exception(MessageFormat.format("Bucket -{0} does not exist.", bucket_name));
-        }
-        return true;
+        return false;
     }
 
     /**
